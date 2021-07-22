@@ -5,6 +5,7 @@ using System.Text.Json;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
+using NosCDN.NosPack;
 using NosCDN.Utils;
 
 namespace NosCDN
@@ -22,9 +23,10 @@ namespace NosCDN
             response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
 
             var spark = SparkNosTaleDataSource.Latest();
-            var gtd = spark.FileEntries().Single(e => e.Key.ToLower().Contains("nsgtddata")).Value.Download();
+            var nosGtdDataBytes = spark.FileEntries().Single(e => e.Key.ToLower().Contains("nsgtddata")).Value.Download();
+            var nosGtdData = NTStringContainer.Load(nosGtdDataBytes);
 
-            response.WriteString(gtd.Length + "");
+            response.WriteString(nosGtdData.Entries.Count + " ");
 
             return response;
         }
