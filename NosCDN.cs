@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text.Json;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -12,22 +9,29 @@ using NosCDN.Utils;
 
 namespace NosCDN
 {
-    public static class All
+    public static class NosCDN
     {
-        [Function("All/{file}")]
+        [Function("Data/{file}")]
         public static HttpResponseData Run([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req,
             FunctionContext executionContext, string file)
         {
-            var logger = executionContext.GetLogger("All");
+            var logger = executionContext.GetLogger("NosCDN");
             logger.LogInformation("C# HTTP trigger function processed a request.");
-
-            var response = req.CreateResponse(HttpStatusCode.OK);
-            response.Headers.Add("Content-Type", "application/json; charset=utf-8");
 
             var spark = SparkNosTaleDataSource.Latest();
             var nosGtdDataBytes = spark.FileEntries().Single(e => e.Key.ToLower().Contains("nsgtddata")).Value.Download();
             var nosGtdData = NTStringContainer.Load(nosGtdDataBytes);
-            var itemDat = System.Text.Encoding.ASCII.GetString(nosGtdData.Entries[file].Content);
+
+            if (!nosGtdData.Entries.TryGetValue(file, out var datFile))
+            {
+                var errorResponse = req.CreateResponse(HttpStatusCode.NotFound);
+                return errorResponse;
+            }
+
+            var itemDat = System.Text.Encoding.ASCII.GetString(datFile.Content);
+
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            response.Headers.Add("Content-Type", "application/json; charset=utf-8");
 
             response.WriteString(NosTaleDatToJsonConverter.Convert(itemDat).ToString());
 
