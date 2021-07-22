@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -25,8 +26,9 @@ namespace NosCDN
             var spark = SparkNosTaleDataSource.Latest();
             var nosGtdDataBytes = spark.FileEntries().Single(e => e.Key.ToLower().Contains("nsgtddata")).Value.Download();
             var nosGtdData = NTStringContainer.Load(nosGtdDataBytes);
+            var itemDat = System.Text.Encoding.ASCII.GetString(nosGtdData.Entries["Item.dat"].Content);
 
-            response.WriteString(nosGtdData.Entries.Count + " ");
+            response.WriteString(itemDat);
 
             return response;
         }
