@@ -7,17 +7,19 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Specialized;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace NosCDN.Utils
 {
     public class AzureBlobCache
     {
-        private readonly BlobContainerClient _blobContainerClient = new("UseDevelopmentStorage=true", "noscdn");
+        private readonly BlobContainerClient _blobContainerClient;
         private readonly ILogger<AzureBlobCache> _logger;
 
-        public AzureBlobCache(ILogger<AzureBlobCache> logger)
+        public AzureBlobCache(IConfiguration configuration, ILogger<AzureBlobCache> logger)
         {
+            _blobContainerClient = new(configuration.GetValue<string>("ConnectionString"), "noscdn");
             _logger = logger;
             _blobContainerClient.CreateIfNotExists();
         }
