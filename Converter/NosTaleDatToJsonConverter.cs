@@ -11,17 +11,25 @@ namespace NosCDN.Converter
     {
         public static JsonArray Convert(string dat)
         {
-            var splitted = dat.Split("\r");
+            var split = dat.Split("\r");
             var items = new JsonArray();
             JsonObject obj = null;
             
-            for (int i = 0; i < splitted.Length; i++)
+            for (var i = 0; i < split.Length; i++)
             {
-                string line = splitted[i];
-                if (line.Length == 0) continue;
-                var splittedLine = line.Split("\t").Where(e => e.Length > 0).ToList();
+                var line = split[i];
 
-                if (line[0] == '~' || line[0] == '#' || splittedLine[0] == "END")
+                /* Ignoring slash-slash comments found e.g. in team.dat */
+                if (line.Contains("//"))
+                    line = line.Substring(0, line.IndexOf("//", StringComparison.Ordinal));
+
+                /* Skipping empty lines */
+                if (line.Length == 0) continue;
+
+                var splitLine = line.Split('\t', ' ').Where(e => e.Length > 0).ToList();
+
+                /* Treat ~, #, END as possible object separators */
+                if (line[0] == '~' || line[0] == '#' || splitLine[0] == "END")
                 {
                     if (obj != null)
                     {
@@ -31,37 +39,27 @@ namespace NosCDN.Converter
                     continue;
                 }
 
-                if (splittedLine[0] == "VNUM")
+                /* Treat VNUM as an element that starts an object definition */
+                if (splitLine[0] == "VNUM")
                 {
                     obj = new JsonObject();
                 }
 
-                if (splittedLine[0] == "LINEDESC")
-                {
-                    var lineDesc = Int32.Parse(splittedLine[1]);
-                    var descLines = new JsonArray();
-                    for (int c = 0; c < lineDesc; c++)
-                    {
-                        i++;
-                        line = splitted[i];
-                        descLines.Add(new JsonPrimitive(line));
-                    }
+                /* Ignore BEGIN keyword found e.g. in quest.dat */
+                if(splitLine[0] == "BEGIN") continue;;
 
-                    obj[splittedLine[0].ToLower()] = descLines;
+                /* LINEDESC needs some special treatment */
+                if (splitLine[0] == "LINEDESC")
+                {
+                    var lineDesc = int.Parse(splitLine[1]);
+                    obj[splitLine[0].ToLower()] = lineDesc;
+                    i++;
+                    line = split[i];
+                    obj["desc"] = line;
                     continue;
                 }
 
-                obj[splittedLine[0].ToLower()] = new JsonArray(splittedLine.Skip(1).Select((o) =>
-                {
-                    if (o.StartsWith("z"))
-                    {
-                        return new JsonPrimitive(o);
-                    }
-                    else
-                    {
-                        return new JsonPrimitive(int.Parse(o));
-                    }
-                }));
+                obj[splitLine[0].ToLower()] = new JsonArray(splitLine.Skip(1).Select(o => o.StartsWith("z") ? new JsonPrimitive(o) : new JsonPrimitive(int.Parse(o))));
             }
 
             return items;
