@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Json;
+using System.Linq;
 
 namespace NosCDN.Converter
 {
@@ -14,7 +11,7 @@ namespace NosCDN.Converter
             var split = dat.Split("\r");
             var items = new JsonArray();
             JsonObject obj = null;
-            
+
             for (var i = 0; i < split.Length; i++)
             {
                 var line = split[i];
@@ -36,17 +33,16 @@ namespace NosCDN.Converter
                         items.Add(obj);
                         obj = null;
                     }
+
                     continue;
                 }
 
                 /* Treat VNUM as an element that starts an object definition */
-                if (splitLine[0] == "VNUM")
-                {
-                    obj = new JsonObject();
-                }
+                if (splitLine[0] == "VNUM") obj = new JsonObject();
 
                 /* Ignore BEGIN keyword found e.g. in quest.dat */
-                if(splitLine[0] == "BEGIN") continue;;
+                if (splitLine[0] == "BEGIN") continue;
+                ;
 
                 /* LINEDESC needs some special treatment */
                 if (splitLine[0] == "LINEDESC")
@@ -59,7 +55,8 @@ namespace NosCDN.Converter
                     continue;
                 }
 
-                obj[splitLine[0].ToLower()] = new JsonArray(splitLine.Skip(1).Select(o => o.StartsWith("z") ? new JsonPrimitive(o) : new JsonPrimitive(int.Parse(o))));
+                obj[splitLine[0].ToLower()] = new JsonArray(splitLine.Skip(1).Select(o =>
+                    o.StartsWith("z") ? new JsonPrimitive(o) : new JsonPrimitive(int.Parse(o))));
             }
 
             return items;

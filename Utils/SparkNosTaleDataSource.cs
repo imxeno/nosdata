@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -16,22 +15,23 @@ namespace NosCDN.Utils
         public static readonly string PatchesBaseUrl = "https://patches.gameforge.com";
 
         private readonly List<SparkNosTaleDataSourceEntry> _entries;
-        public ulong TotalSize { get; set; }
-        public ulong Build { get; set; }
 
         private SparkNosTaleDataSource(NosTalePatchDto dto)
         {
             Build = dto.Build;
             TotalSize = dto.TotalSize;
-            _entries = dto.Entries.Select((e) => new SparkNosTaleDataSourceEntry(this, e)).ToList();
+            _entries = dto.Entries.Select(e => new SparkNosTaleDataSourceEntry(this, e)).ToList();
         }
+
+        public ulong TotalSize { get; set; }
+        public ulong Build { get; set; }
 
         public byte[] DownloadPatch(string path)
         {
             var sslFailureCallback = new RemoteCertificateValidationCallback(
                 (sender, _, _, sslPolicyErrors) =>
-                    (sender is HttpWebRequest && ((HttpWebRequest) sender).Host == "patches.gameforge.com" &&
-                     sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch));
+                    sender is HttpWebRequest && ((HttpWebRequest) sender).Host == "patches.gameforge.com" &&
+                    sslPolicyErrors == SslPolicyErrors.RemoteCertificateNameMismatch);
             try
             {
                 ServicePointManager.ServerCertificateValidationCallback += sslFailureCallback;
@@ -70,7 +70,8 @@ namespace NosCDN.Utils
         {
             using var webClient = new WebClient();
             var body = webClient.DownloadString(IndexUrl);
-            var obj = JsonSerializer.Deserialize<NosTalePatchDto>(body, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            var obj = JsonSerializer.Deserialize<NosTalePatchDto>(body,
+                new JsonSerializerOptions(JsonSerializerDefaults.Web));
             return obj;
         }
     }
@@ -78,12 +79,6 @@ namespace NosCDN.Utils
     public class SparkNosTaleDataSourceEntry
     {
         private readonly SparkNosTaleDataSource _dataSource;
-        public string Path { get; }
-        public string Sha1 { get; }
-        public string File { get; }
-        public uint Flags { get; }
-        public ulong Size { get; }
-        public bool Folder { get; }
 
         internal SparkNosTaleDataSourceEntry(SparkNosTaleDataSource dataSource, NosTalePatchEntryDto dto)
         {
@@ -95,6 +90,13 @@ namespace NosCDN.Utils
             Size = dto.Size;
             Folder = dto.Folder;
         }
+
+        public string Path { get; }
+        public string Sha1 { get; }
+        public string File { get; }
+        public uint Flags { get; }
+        public ulong Size { get; }
+        public bool Folder { get; }
 
         public byte[] Download()
         {

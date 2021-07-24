@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Specialized;
 using Microsoft.Extensions.Configuration;
@@ -19,7 +14,8 @@ namespace NosCDN.Utils
 
         public AzureBlobCache(IConfiguration configuration, ILogger<AzureBlobCache> logger)
         {
-            _blobContainerClient = new(configuration.GetValue<string>("ConnectionString"), "noscdn");
+            _blobContainerClient =
+                new BlobContainerClient(configuration.GetValue<string>("ConnectionString"), "noscdn");
             _logger = logger;
             _blobContainerClient.CreateIfNotExists();
         }
@@ -30,10 +26,7 @@ namespace NosCDN.Utils
             var blob = _blobContainerClient.GetBlockBlobClient(key);
             if (!blob.Exists().Value) return null;
             var createdOn = blob.GetProperties().Value.CreatedOn;
-            if (DateTime.Now.Subtract(createdOn.LocalDateTime) > TimeSpan.FromHours(1))
-            {
-                return null;
-            }
+            if (DateTime.Now.Subtract(createdOn.LocalDateTime) > TimeSpan.FromDays(1)) return null;
             var ms = new MemoryStream();
             blob.Download().Value.Content.CopyTo(ms);
             return ms.ToArray();

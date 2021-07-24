@@ -4,6 +4,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Text;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -16,7 +17,6 @@ namespace NosCDN
     public class NosCDN
     {
         private readonly AzureBlobCache _blobCache;
-        private readonly ILogger<NosCDN> _logger;
 
         private readonly Dictionary<string, string> _genericDatFiles = new()
         {
@@ -24,12 +24,14 @@ namespace NosCDN
             {"cards", "Card.dat"},
             {"items", "Item.dat"},
             {"monsters", "monster.dat"},
-            {"skills", "Skill.dat"}, 
+            {"skills", "Skill.dat"},
             {"quests", "quest.dat"},
             {"questprizes", "qstprize.dat"},
             {"teams", "team.dat"},
             {"fishes", "fish.dat"}
         };
+
+        private readonly ILogger<NosCDN> _logger;
 
         private readonly Dictionary<string, string> _rawOnlyDatFiles = new()
         {
@@ -48,22 +50,17 @@ namespace NosCDN
         }
 
         [Function("Data/{type}")]
-        public HttpResponseData Get([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req,
+        public HttpResponseData Get([HttpTrigger(AuthorizationLevel.Anonymous, "get")]
+            HttpRequestData req,
             FunctionContext executionContext, string type)
         {
             var lowerCaseType = type.ToLower();
 
-            if (!_genericDatFiles.ContainsKey(lowerCaseType))
-            {
-                return req.CreateResponse(HttpStatusCode.BadRequest);
-            }
+            if (!_genericDatFiles.ContainsKey(lowerCaseType)) return req.CreateResponse(HttpStatusCode.BadRequest);
 
             var datFile = FetchDatFile(_genericDatFiles[lowerCaseType]);
 
-            if (datFile == null)
-            {
-                return req.CreateResponse(HttpStatusCode.NotFound);
-            }
+            if (datFile == null) return req.CreateResponse(HttpStatusCode.NotFound);
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json; charset=utf-8");
@@ -74,31 +71,23 @@ namespace NosCDN
         }
 
         [Function("Data/{type}/Raw")]
-        public HttpResponseData GetRaw([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req,
+        public HttpResponseData GetRaw([HttpTrigger(AuthorizationLevel.Anonymous, "get")]
+            HttpRequestData req,
             FunctionContext executionContext, string type)
         {
             var lowerCaseType = type.ToLower();
             string datFileName;
 
             if (_genericDatFiles.ContainsKey(lowerCaseType))
-            {
                 datFileName = _genericDatFiles[lowerCaseType];
-            }
             else if (!_rawOnlyDatFiles.ContainsKey(lowerCaseType))
-            {
                 return req.CreateResponse(HttpStatusCode.BadRequest);
-            }
             else
-            {
                 datFileName = _rawOnlyDatFiles[lowerCaseType];
-            }
 
             var datFile = FetchDatFile(datFileName);
 
-            if (datFile == null)
-            {
-                return req.CreateResponse(HttpStatusCode.NotFound);
-            }
+            if (datFile == null) return req.CreateResponse(HttpStatusCode.NotFound);
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "text/plain; charset=utf-8");
@@ -109,16 +98,14 @@ namespace NosCDN
         }
 
         [Function("Icons/{id}")]
-        public HttpResponseData GetIcon([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req,
+        public HttpResponseData GetIcon([HttpTrigger(AuthorizationLevel.Anonymous, "get")]
+            HttpRequestData req,
             FunctionContext executionContext, int id)
         {
             var icon = FetchIconFile(id);
 
-            if (icon == null)
-            {
-                return req.CreateResponse(HttpStatusCode.NotFound);
-            }
-            
+            if (icon == null) return req.CreateResponse(HttpStatusCode.NotFound);
+
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "image/bmp; charset=utf-8");
 
@@ -135,10 +122,7 @@ namespace NosCDN
                 _logger.LogInformation("Serving freshly fetched data");
                 var nosGtdData = FetchStringContainer("NSGtdData.NOS");
 
-                if (!nosGtdData.Entries.TryGetValue(name, out var datFile))
-                {
-                    return null;
-                }
+                if (!nosGtdData.Entries.TryGetValue(name, out var datFile)) return null;
 
                 itemDatBytes = datFile.Content;
                 _blobCache.Save("gtd/" + name, itemDatBytes);
@@ -148,7 +132,7 @@ namespace NosCDN
                 _logger.LogInformation("Serving data from Azure Blob Cache");
             }
 
-            return System.Text.Encoding.ASCII.GetString(itemDatBytes);
+            return Encoding.ASCII.GetString(itemDatBytes);
         }
 
         private byte[] FetchIconFile(int id)
@@ -175,21 +159,21 @@ namespace NosCDN
                 var bitmap = new Bitmap(xDim, yDim);
 
                 for (var y = 0; y < yDim; y++)
+                for (var x = 0; x < xDim; x++)
                 {
-                    for (var x = 0; x < xDim; x++)
-                    {
-                        int gb = reader.ReadByte();
-                        int ar = reader.ReadByte();
-                        var g = (gb >> 4) / 15d;
-                        var b = (gb & 0xF) / 15d;
-                        var a = (ar >> 4) / 15d;
-                        var r = (ar & 0xF) / 15d;
-                        bitmap.SetPixel(x, y, Color.FromArgb((int)(a * 255), (int)(r * 255), (int)(g * 255), (int)(b * 255)));
-                    }
+                    int gb = reader.ReadByte();
+                    int ar = reader.ReadByte();
+                    var g = (gb >> 4) / 15d;
+                    var b = (gb & 0xF) / 15d;
+                    var a = (ar >> 4) / 15d;
+                    var r = (ar & 0xF) / 15d;
+                    bitmap.SetPixel(x, y,
+                        Color.FromArgb((int) (a * 255), (int) (r * 255), (int) (g * 255), (int) (b * 255)));
                 }
 
                 var converter = new ImageConverter();
-                iconBytes = (byte[])converter.ConvertTo(bitmap, typeof(byte[])) ?? throw new InvalidOperationException();
+                iconBytes = (byte[]) converter.ConvertTo(bitmap, typeof(byte[])) ??
+                            throw new InvalidOperationException();
 
                 _blobCache.Save("ip/" + id + ".bmp", iconBytes);
             }

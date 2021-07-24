@@ -1,8 +1,5 @@
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Azure.Functions.Worker.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using NosCDN.Utils;
 
 namespace NosCDN
@@ -13,10 +10,7 @@ namespace NosCDN
         {
             var host = new HostBuilder()
                 .ConfigureFunctionsWorkerDefaults()
-                .ConfigureServices(s =>
-                {
-                    s.AddSingleton<AzureBlobCache, AzureBlobCache>();
-                })
+                .ConfigureServices(s => { s.AddSingleton<AzureBlobCache, AzureBlobCache>(); })
                 .Build();
 
             host.Run();
