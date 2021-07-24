@@ -112,46 +112,23 @@ namespace NosCDN
         public HttpResponseData GetIcon([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req,
             FunctionContext executionContext, int id)
         {
-            var container = FetchDataContainer("NSipData.NOS");
+            var icon = FetchIconFile(id);
 
+            if (icon == null)
+            {
+                return req.CreateResponse(HttpStatusCode.NotFound);
+            }
+            
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "image/bmp; charset=utf-8");
 
-            var imageData = container.GetEntry(id).Content;
-            var imageDataStream = new MemoryStream(imageData);
-            var reader = new BinaryReader(imageDataStream);
-
-            imageDataStream.Seek(1, SeekOrigin.Current);
-            var xDim = reader.ReadUInt16();
-            var yDim = reader.ReadUInt16();
-            var xCenter = reader.ReadUInt16();
-            var yCenter = reader.ReadUInt16();
-            imageDataStream.Seek(4, SeekOrigin.Current);
-            var bitmap = new Bitmap(xDim, yDim);
-
-            for (var y = 0; y < yDim; y++)
-            {
-                for (var x = 0; x < xDim; x++)
-                {
-                    int gb = reader.ReadByte();
-                    int ar = reader.ReadByte();
-                    var g = (gb >> 4) / 15d;
-                    var b = (gb & 0xF) / 15d;
-                    var a = (ar >> 4) / 15d;
-                    var r = (ar & 0xF) / 15d;
-                    bitmap.SetPixel(x, y, Color.FromArgb((int) (a * 255), (int) (r * 255), (int) (g * 255), (int) (b * 255)));
-                }
-            }
-
-            var converter = new ImageConverter();
-            response.WriteBytes((byte[])converter.ConvertTo(bitmap, typeof(byte[])) ?? throw new InvalidOperationException());
+            response.WriteBytes(icon);
 
             return response;
         }
 
         private string FetchDatFile(string name)
         {
-
             var itemDatBytes = _blobCache.Load("gtd/" + name);
             if (itemDatBytes == null)
             {
@@ -164,7 +141,7 @@ namespace NosCDN
                 }
 
                 itemDatBytes = datFile.Content;
-                _blobCache.Save(name, itemDatBytes);
+                _blobCache.Save("gtd/" + name, itemDatBytes);
             }
             else
             {
@@ -172,6 +149,56 @@ namespace NosCDN
             }
 
             return System.Text.Encoding.ASCII.GetString(itemDatBytes);
+        }
+
+        private byte[] FetchIconFile(int id)
+        {
+            var iconBytes = _blobCache.Load("ip/" + id + ".bmp");
+            if (iconBytes == null)
+            {
+                _logger.LogInformation("Serving freshly fetched data");
+                var iconContainer = FetchDataContainer("NSipData.NOS");
+                var icon = iconContainer.GetEntry(id);
+
+                if (icon == null) return null;
+
+                var imageData = icon.Content;
+                var imageDataStream = new MemoryStream(imageData);
+                var reader = new BinaryReader(imageDataStream);
+
+                imageDataStream.Seek(1, SeekOrigin.Current);
+                var xDim = reader.ReadUInt16();
+                var yDim = reader.ReadUInt16();
+                var xCenter = reader.ReadUInt16();
+                var yCenter = reader.ReadUInt16();
+                imageDataStream.Seek(4, SeekOrigin.Current);
+                var bitmap = new Bitmap(xDim, yDim);
+
+                for (var y = 0; y < yDim; y++)
+                {
+                    for (var x = 0; x < xDim; x++)
+                    {
+                        int gb = reader.ReadByte();
+                        int ar = reader.ReadByte();
+                        var g = (gb >> 4) / 15d;
+                        var b = (gb & 0xF) / 15d;
+                        var a = (ar >> 4) / 15d;
+                        var r = (ar & 0xF) / 15d;
+                        bitmap.SetPixel(x, y, Color.FromArgb((int)(a * 255), (int)(r * 255), (int)(g * 255), (int)(b * 255)));
+                    }
+                }
+
+                var converter = new ImageConverter();
+                iconBytes = (byte[])converter.ConvertTo(bitmap, typeof(byte[])) ?? throw new InvalidOperationException();
+
+                _blobCache.Save("ip/" + id + ".bmp", iconBytes);
+            }
+            else
+            {
+                _logger.LogInformation("Serving data from Azure Blob Cache");
+            }
+
+            return iconBytes;
         }
 
         private NTDataContainer FetchDataContainer(string name)

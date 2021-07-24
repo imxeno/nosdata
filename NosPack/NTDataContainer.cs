@@ -58,7 +58,7 @@ namespace NosCDN.NosPack
 
         public NTDataContainerEntry GetEntry(int id)
         {
-            return Entries.First((e) => e.Id == id);
+            return Entries.FirstOrDefault((e) => e.Id == id);
         }
 
         internal class EntryHeader

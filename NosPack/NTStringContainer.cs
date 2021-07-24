@@ -16,10 +16,10 @@ namespace NosCDN.NosPack
         {
             using var stream = new MemoryStream(file);
             using var reader = new BinaryReader(stream);
-            NTStringContainer container = new NTStringContainer();
+            var container = new NTStringContainer();
 
 
-            int fileCount = reader.ReadInt32();
+            var fileCount = reader.ReadInt32();
 
             for (var i = 0; i < fileCount; i++)
             {
@@ -27,7 +27,7 @@ namespace NosCDN.NosPack
                 var nameLength = reader.ReadInt32();
 
                 var name = "";
-                for(int j = 0; j < nameLength; j++)
+                for(var j = 0; j < nameLength; j++)
                 {
                     var c = reader.ReadChar();
                     name += c;
