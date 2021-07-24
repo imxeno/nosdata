@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Net;
 using Microsoft.Azure.Functions.Worker;
@@ -105,16 +108,55 @@ namespace NosCDN
             return response;
         }
 
+        [Function("Icons/{id}")]
+        public HttpResponseData GetIcon([HttpTrigger(AuthorizationLevel.Anonymous, "get")] HttpRequestData req,
+            FunctionContext executionContext, int id)
+        {
+            var container = FetchDataContainer("NSipData.NOS");
+
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            response.Headers.Add("Content-Type", "image/bmp; charset=utf-8");
+
+            var imageData = container.GetEntry(id).Content;
+            var imageDataStream = new MemoryStream(imageData);
+            var reader = new BinaryReader(imageDataStream);
+
+            imageDataStream.Seek(1, SeekOrigin.Current);
+            var xDim = reader.ReadUInt16();
+            var yDim = reader.ReadUInt16();
+            var xCenter = reader.ReadUInt16();
+            var yCenter = reader.ReadUInt16();
+            imageDataStream.Seek(4, SeekOrigin.Current);
+            var bitmap = new Bitmap(xDim, yDim);
+
+            for (var y = 0; y < yDim; y++)
+            {
+                for (var x = 0; x < xDim; x++)
+                {
+                    int gb = reader.ReadByte();
+                    int ar = reader.ReadByte();
+                    var g = (gb >> 4) / 15d;
+                    var b = (gb & 0xF) / 15d;
+                    var a = (ar >> 4) / 15d;
+                    var r = (ar & 0xF) / 15d;
+                    bitmap.SetPixel(x, y, Color.FromArgb((int) (a * 255), (int) (r * 255), (int) (g * 255), (int) (b * 255)));
+                }
+            }
+
+            var converter = new ImageConverter();
+            response.WriteBytes((byte[])converter.ConvertTo(bitmap, typeof(byte[])) ?? throw new InvalidOperationException());
+
+            return response;
+        }
+
         private string FetchDatFile(string name)
         {
 
-            var itemDatBytes = _blobCache.Load(name);
+            var itemDatBytes = _blobCache.Load("gtd/" + name);
             if (itemDatBytes == null)
             {
                 _logger.LogInformation("Serving freshly fetched data");
-                var spark = SparkNosTaleDataSource.Latest();
-                var nosGtdDataBytes = spark.FileEntries().Single(e => e.Key.ToLower().Contains("nsgtddata")).Value.Download();
-                var nosGtdData = NTStringContainer.Load(nosGtdDataBytes);
+                var nosGtdData = FetchStringContainer("NSGtdData.NOS");
 
                 if (!nosGtdData.Entries.TryGetValue(name, out var datFile))
                 {
@@ -130,6 +172,38 @@ namespace NosCDN
             }
 
             return System.Text.Encoding.ASCII.GetString(itemDatBytes);
+        }
+
+        private NTDataContainer FetchDataContainer(string name)
+        {
+            var data = FetchNosTaleUpdateFile(name);
+            return NTDataContainer.Load(data);
+        }
+
+        private NTStringContainer FetchStringContainer(string name)
+        {
+            var data = FetchNosTaleUpdateFile(name);
+            return NTStringContainer.Load(data);
+        }
+
+        private byte[] FetchNosTaleUpdateFile(string name)
+        {
+            var lowerCaseName = name.ToLower();
+            var data = _blobCache.Load("dat/" + lowerCaseName);
+            if (data == null)
+            {
+                _logger.LogInformation("Serving freshly fetched data for " + name);
+                var spark = SparkNosTaleDataSource.Latest();
+                data = spark.FileEntries().Single(e => e.Key.ToLower().Contains(lowerCaseName)).Value.Download();
+
+                _blobCache.Save("dat/" + lowerCaseName, data);
+            }
+            else
+            {
+                _logger.LogInformation("Serving data from Azure Blob Cache");
+            }
+
+            return data;
         }
     }
 }
