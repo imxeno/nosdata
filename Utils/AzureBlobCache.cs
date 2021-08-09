@@ -15,7 +15,7 @@ namespace NosData.Utils
         public AzureBlobCache(IConfiguration configuration, ILogger<AzureBlobCache> logger)
         {
             _blobContainerClient =
-                new BlobContainerClient(configuration.GetValue<string>("ConnectionString"), "NosData");
+                new BlobContainerClient(configuration.GetValue<string>("ConnectionString"), "nosdata");
             _logger = logger;
             _blobContainerClient.CreateIfNotExists();
         }
