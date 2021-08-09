@@ -8,13 +8,13 @@ using System.Text;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
-using NosCDN.Converter;
-using NosCDN.NosPack;
-using NosCDN.Utils;
+using NosData.Converter;
+using NosData.NosPack;
+using NosData.Utils;
 
-namespace NosCDN
+namespace NosData
 {
-    public class NosCDN
+    public class NosData
     {
         private readonly AzureBlobCache _blobCache;
 
@@ -31,7 +31,7 @@ namespace NosCDN
             {"fishes", "fish.dat"}
         };
 
-        private readonly ILogger<NosCDN> _logger;
+        private readonly ILogger<NosData> _logger;
 
         private readonly Dictionary<string, string> _rawOnlyDatFiles = new()
         {
@@ -43,7 +43,7 @@ namespace NosCDN
             {"questnpcs", "qstnpc.dat"}
         };
 
-        public NosCDN(ILogger<NosCDN> logger, AzureBlobCache blobCache)
+        public NosData(ILogger<NosData> logger, AzureBlobCache blobCache)
         {
             _blobCache = blobCache;
             _logger = logger;

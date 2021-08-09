@@ -5,7 +5,7 @@ using System.Linq;
 
 // ReSharper disable InconsistentNaming
 
-namespace NosCDN.NosPack
+namespace NosData.NosPack
 {
     internal class NTStringContainer
     {

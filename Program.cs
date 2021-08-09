@@ -1,8 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using NosCDN.Utils;
+using NosData.Utils;
 
-namespace NosCDN
+namespace NosData
 {
     public class Program
     {
