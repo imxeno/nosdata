@@ -9,6 +9,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using NosCDN.Converter;
+using NosCDN.DTOs;
 using NosCDN.NosPack;
 using NosCDN.Utils;
 
@@ -47,6 +48,47 @@ namespace NosCDN
         {
             _blobCache = blobCache;
             _logger = logger;
+        }
+
+        [Function("ExecutableVersion")]
+        public NosTaleExecutableVersionDto GetExecutableVersion([HttpTrigger(AuthorizationLevel.Anonymous, "get")]
+            HttpRequestData req,
+            FunctionContext executionContext, string type)
+        {
+            using var md5 = System.Security.Cryptography.MD5.Create();
+
+            var spark = SparkNosTaleDataSource.Latest();
+
+            var clientDx = FetchNosTaleBinary("NostaleClientX.exe");
+            var clientGl = FetchNosTaleBinary("NostaleClient.exe");
+
+            var versionIndex = ByteArrayUtils.PatternAt(clientDx,
+                new byte[]
+                {
+                    0x46, 0x00, 0x69, 0x00, 0x6c, 0x00, 0x65, 0x00, 0x56, 0x00, 0x65, 0x00, 0x72, 0x00, 0x73, 0x00,
+                    0x69, 0x00, 0x6f, 0x00, 0x6e, 0x00
+                }) + 0x1A;
+
+            var version = "";
+            for (var i = 0; i < 10; i++)
+            {
+                version += (char)clientDx[versionIndex + i * 2];
+            }
+
+            md5.TransformFinalBlock(clientDx, 0, clientDx.Length);
+            var dxHash = md5.Hash;
+            md5.TransformFinalBlock(clientGl, 0, clientGl.Length);
+            var glHash = md5.Hash;
+
+            return new NosTaleExecutableVersionDto
+            {
+                Md5 =
+                {
+                    Client = BitConverter.ToString(glHash).Replace("-", string.Empty),
+                    ClientX = BitConverter.ToString(dxHash).Replace("-", string.Empty)
+                },
+                Version = version
+            };
         }
 
         [Function("Data/{type}")]
@@ -208,6 +250,26 @@ namespace NosCDN
                 data = spark.FileEntries().Single(e => e.Key.ToLower().Contains(lowerCaseName)).Value.Download();
 
                 _blobCache.Save("dat/" + lowerCaseName, data);
+            }
+            else
+            {
+                _logger.LogInformation("Serving data from Azure Blob Cache");
+            }
+
+            return data;
+        }
+
+        private byte[] FetchNosTaleBinary(string name)
+        {
+            var lowerCaseName = name.ToLower();
+            var data = _blobCache.Load("bin/" + lowerCaseName);
+            if (data == null)
+            {
+                _logger.LogInformation("Serving freshly fetched data for " + name);
+                var spark = SparkNosTaleDataSource.Latest();
+                data = spark.FileEntries().Single(e => e.Key.ToLower().Contains(lowerCaseName)).Value.Download();
+
+                _blobCache.Save("bin/" + lowerCaseName, data);
             }
             else
             {
