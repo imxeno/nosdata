@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace NosCDN.DTOs
+namespace NosData.DTOs
 {
     public class NosTalePatchDto
     {

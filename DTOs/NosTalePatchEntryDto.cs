@@ -1,4 +1,4 @@
-﻿namespace NosCDN.DTOs
+﻿namespace NosData.DTOs
 {
     public class NosTalePatchEntryDto
     {

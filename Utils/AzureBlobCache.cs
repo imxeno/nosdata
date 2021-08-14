@@ -5,7 +5,7 @@ using Azure.Storage.Blobs.Specialized;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace NosCDN.Utils
+namespace NosData.Utils
 {
     public class AzureBlobCache
     {
@@ -15,7 +15,7 @@ namespace NosCDN.Utils
         public AzureBlobCache(IConfiguration configuration, ILogger<AzureBlobCache> logger)
         {
             _blobContainerClient =
-                new BlobContainerClient(configuration.GetValue<string>("ConnectionString"), "noscdn");
+                new BlobContainerClient(configuration.GetValue<string>("ConnectionString"), "nosdata");
             _logger = logger;
             _blobContainerClient.CreateIfNotExists();
         }

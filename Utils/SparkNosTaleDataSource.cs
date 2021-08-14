@@ -3,9 +3,9 @@ using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Text.Json;
-using NosCDN.DTOs;
+using NosData.DTOs;
 
-namespace NosCDN.Utils
+namespace NosData.Utils
 {
     public class SparkNosTaleDataSource
     {

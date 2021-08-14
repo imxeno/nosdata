@@ -2,7 +2,7 @@
 using System.Json;
 using System.Linq;
 
-namespace NosCDN.Converter
+namespace NosData.Converter
 {
     public static class NosTaleDatToJsonConverter
     {
