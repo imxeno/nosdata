@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NosCDN.Utils
+namespace NosData.Utils
 {
     class ByteArrayUtils
     {
