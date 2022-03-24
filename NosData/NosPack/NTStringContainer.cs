@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace NosData.NosPack
 {
-    internal class NTStringContainer
+    public class NTStringContainer
     {
         public readonly Dictionary<string, NTStringContainerEntry> Entries = new();
 
@@ -43,7 +43,7 @@ namespace NosData.NosPack
             return container;
         }
 
-        internal class NTStringContainerEntry
+        public class NTStringContainerEntry
         {
             private static readonly byte[] _crypto
                 = {0x00, 0x20, 0x2D, 0x2E, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x0A, 0x00};

@@ -6,7 +6,7 @@ namespace NosData.Converter
 {
     public static class NosTaleDatToJsonConverter
     {
-        public static JsonArray Convert(string dat)
+        public static string Convert(string dat)
         {
             var split = dat.Split("\r");
             var items = new JsonArray();
@@ -59,7 +59,7 @@ namespace NosData.Converter
                     o.StartsWith("z") ? new JsonPrimitive(o) : new JsonPrimitive(int.Parse(o))));
             }
 
-            return items;
+            return items.ToString();
         }
     }
 }

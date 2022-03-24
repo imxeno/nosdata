@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace NosData.DTOs
 {
-    public class NosTaleExecutableVersionDto
+    public class NosTaleExecutableVersion
     {
         public NosTaleExecutableVersionMd5Dto Md5 { get; set; } = new();
         public string Version { get; set; }

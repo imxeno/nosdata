@@ -7,7 +7,7 @@ using System.Text;
 
 namespace NosData.NosPack
 {
-    internal class NTDataContainer
+    public class NTDataContainer
     {
         private readonly string _header;
         private readonly byte _separator;
@@ -70,7 +70,7 @@ namespace NosData.NosPack
             public int Offset { get; }
         }
 
-        internal class NTDataContainerEntry
+        public class NTDataContainerEntry
         {
             private NTDataContainerEntry(int id, int timestamp, bool isCompressed, byte[] content)
             {

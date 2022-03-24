@@ -263,6 +263,5 @@ paket-files/
 __pycache__/
 *.pyc
 
-# Azurite
-__blobstorage__
-__azurite*.json
+# Visual Studio's Properties folder
+Properties/
