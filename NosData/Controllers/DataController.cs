@@ -36,7 +36,7 @@ namespace NosData.Controllers
 
         [FunctionName("GetRawData")]
         public async Task<IActionResult> GetRawData(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "data/raw/{type}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "data/{type}/raw")] HttpRequest req,
             ILogger log, string type)
         {
             if (!DataService.GenericDatFiles.ContainsKey(type) && !DataService.RawOnlyDatFiles.ContainsKey(type))
