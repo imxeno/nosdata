@@ -34,21 +34,25 @@ namespace NosData.Services
             _nosFileService = nosFileService;
         }
 
-        public async Task<bool> RefreshAll()
+        public async Task<bool> RefreshAll(bool force = false)
         {
 
             var latestHash = _nosFileService.GetUpdateHash();
-            var blobStream = await _blobsService.GetBlob(Container, UpdateSha256FileName);
 
-            if (blobStream != null)
+            if (!force)
             {
-                await using var currentHashStream = new MemoryStream();
-                await blobStream.CopyToAsync(currentHashStream);
-                var currentHash = Encoding.UTF8.GetString(currentHashStream.ToArray());
-                if (currentHash == latestHash)
+                var blobStream = await _blobsService.GetBlob(Container, UpdateSha256FileName);
+
+                if (blobStream != null)
                 {
-                    _logger.LogInformation("Refresh is not needed - currentHash == latestHash.");
-                    return false;
+                    await using var currentHashStream = new MemoryStream();
+                    await blobStream.CopyToAsync(currentHashStream);
+                    var currentHash = Encoding.UTF8.GetString(currentHashStream.ToArray());
+                    if (currentHash == latestHash)
+                    {
+                        _logger.LogInformation("Refresh is not needed - currentHash == latestHash.");
+                        return false;
+                    }
                 }
             }
 
