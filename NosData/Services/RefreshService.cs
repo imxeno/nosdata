@@ -58,10 +58,10 @@ namespace NosData.Services
             var startTime = DateTime.Now;
             _logger.LogInformation($"Full refresh started at {startTime}.");;
 
-            /*await _executableVersionService.RefreshExecutableVersion();
+            await _executableVersionService.RefreshExecutableVersion();
             await _translationsService.RefreshTranslations();
             await _iconsService.RefreshIcons();
-            await _dataService.RefreshData();*/
+            await _dataService.RefreshData();
 
             _logger.LogInformation($"Full refresh done in {(DateTime.Now - startTime).TotalSeconds} seconds!");
             return true;
