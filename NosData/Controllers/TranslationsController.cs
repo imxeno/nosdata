@@ -36,7 +36,7 @@ namespace NosData.Controllers
 
             var data = await _translationsService.GetTranslations(language, type);
 
-            if (data == null) return new NotFoundResult();
+            if (data == null) return new StatusCodeResult(503);
             return new OkObjectResult(data);
         }
 
