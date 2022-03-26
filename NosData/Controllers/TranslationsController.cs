@@ -24,7 +24,7 @@ namespace NosData.Controllers
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "translations/{language}/{type}")] HttpRequest req,
             ILogger log, string language, string type)
         {
-            if (!TranslationsService.Languages.Contains(type))
+            if (!TranslationsService.Languages.Contains(language))
             {
                 return new NotFoundResult();
             }
