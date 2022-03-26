@@ -29,6 +29,11 @@ namespace NosData.Controllers
                 return new NotFoundResult();
             }
 
+            if (!TranslationsService.LanguageFiles.ContainsKey(type))
+            {
+                return new NotFoundResult();
+            }
+
             var data = await _translationsService.GetTranslations(language, type);
 
             if (data == null) return new NotFoundResult();
@@ -45,9 +50,14 @@ namespace NosData.Controllers
                 return new NotFoundResult();
             }
 
+            if (!TranslationsService.LanguageFiles.ContainsKey(type))
+            {
+                return new NotFoundResult();
+            }
+
             var data = await _translationsService.GetRawTranslations(language, type);
 
-            if (data == null) return new NotFoundResult();
+            if (data == null) return new StatusCodeResult(503);
             return new FileStreamResult(data, "text/plain");
         }
     }

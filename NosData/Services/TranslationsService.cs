@@ -26,6 +26,21 @@ namespace NosData
             "tr"
         };
 
+        public static readonly Dictionary<string, string> LanguageFiles = new()
+        {
+            { "actdescs", "actdesc" },
+            { "bcards", "bcard" },
+            { "cards", "card" },
+            { "items", "item" },
+            { "mapids", "mapiddata" },
+            { "mappoints", "mappointdata" },
+            { "monsters", "monster" },
+            { "npctalks", "npctalk" },
+            { "quests", "quest" },
+            { "skills", "skill" },
+            { "teams", "team" },
+        };
+
         private readonly ILogger<TranslationsService> _logger;
         private readonly NosFileService _nosFileService;
         private readonly BlobsService _blobsService;
@@ -39,7 +54,7 @@ namespace NosData
 
         public async Task<string?> GetTranslations(string language, string type)
         {
-            var stream = await _blobsService.GetBlob("lang", $"{language}/json/{type}.json");
+            var stream = await _blobsService.GetBlob("lang", $"{language}/json/{LanguageFiles[type]}.json");
             if (stream == null) return null;
             await using var ms = new MemoryStream();
             await stream.CopyToAsync(ms);
@@ -48,7 +63,7 @@ namespace NosData
 
         public async Task<Stream?> GetRawTranslations(string language, string type)
         {
-            return await _blobsService.GetBlob("lang", $"{language}/raw/{type}.txt");
+            return await _blobsService.GetBlob("lang", $"{language}/raw/{LanguageFiles[type]}.txt");
         }
 
         [FunctionName("RefreshTranslations")]
