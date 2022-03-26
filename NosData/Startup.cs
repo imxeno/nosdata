@@ -1,4 +1,5 @@
-﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+﻿using System.Text;
+using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using NosData.Services;
 
@@ -15,6 +16,9 @@ namespace NosData
             builder.Services.AddSingleton<ExecutableVersionService>();
             builder.Services.AddSingleton<IconsService>();
             builder.Services.AddSingleton<DataService>();
+            builder.Services.AddSingleton<TranslationsService>();
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }
     }
 }

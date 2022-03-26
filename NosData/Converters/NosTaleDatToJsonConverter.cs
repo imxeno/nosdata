@@ -42,7 +42,6 @@ namespace NosData.Converter
 
                 /* Ignore BEGIN keyword found e.g. in quest.dat */
                 if (splitLine[0] == "BEGIN") continue;
-                ;
 
                 /* LINEDESC needs some special treatment */
                 if (splitLine[0] == "LINEDESC")
@@ -52,6 +51,13 @@ namespace NosData.Converter
                     i++;
                     line = split[i];
                     obj["desc"] = line;
+                    continue;
+                }
+
+                /* Name should be just a string */
+                if (splitLine[0] == "NAME" && splitLine.Count == 2)
+                {
+                    obj[splitLine[0].ToLower()] = splitLine[1];
                     continue;
                 }
 

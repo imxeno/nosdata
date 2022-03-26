@@ -16,13 +16,15 @@ namespace NosData.Controllers
         private readonly DataService _dataService;
         private readonly ExecutableVersionService _executableVersionService;
         private readonly IconsService _iconsService;
+        private readonly TranslationsService _translationsService;
 
         public RefreshController(DataService dataService, ExecutableVersionService executableVersionService,
-            IconsService iconsService)
+            IconsService iconsService, TranslationsService translationsService)
         {
             _dataService = dataService;
             _executableVersionService = executableVersionService;
             _iconsService = iconsService;
+            _translationsService = translationsService;
         }
 
         [FunctionName("AdminRefreshIcons")]
@@ -49,6 +51,15 @@ namespace NosData.Controllers
             ILogger log)
         {
             await _executableVersionService.RefreshExecutableVersion(null, log);
+            return new OkResult();
+        }
+
+        [FunctionName("AdminRefreshTranslations")]
+        public async Task<IActionResult> AdminRefreshTranslations(
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "refresh/translations")] HttpRequest req,
+            ILogger log)
+        {
+            await _translationsService.RefreshTranslations(null, log);
             return new OkResult();
         }
     }
