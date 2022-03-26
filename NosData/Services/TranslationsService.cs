@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
-using NosData.NosPack;
 using NosData.Services;
-using SixLabors.ImageSharp;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Json;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs;
-using Newtonsoft.Json;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace NosData
 {
@@ -62,6 +58,7 @@ namespace NosData
             log.LogInformation($"Translations refresh started at {startTime}");
             foreach(var language in Languages)
             {
+                var encoding = GetEncoding(language);
                 var langContainer = _nosFileService.FetchStringContainer($"NSlangData_{language.ToUpper()}.NOS");
                 foreach (var entry in langContainer.Entries)
                 {
@@ -75,7 +72,7 @@ namespace NosData
                         await _blobsService.UploadBlob("lang", $"{language}/raw/{fileName}.txt", ms);
                     }
                     {
-                        var dict = Encoding.GetEncoding(1252).GetString(entry.Value.Content).Split("\r").ToList()
+                        var dict = Encoding.GetEncoding(encoding).GetString(entry.Value.Content).Split("\r").ToList()
                             .Select((s) => s.Split('\t'));
 
                         JsonObject obj = new();
@@ -91,6 +88,19 @@ namespace NosData
                 }
             }
             log.LogInformation($"Translations refresh done in {(DateTime.Now - startTime).TotalSeconds} seconds!");
+        }
+
+        private string GetEncoding(string language)
+        {
+            return language switch
+            {
+                "de" or "pl" or "it" or "cz" => "Windows-1250",
+                "ru" => "Windows-1251",
+                "uk" or "fr" or "es" => "Windows-1252",
+                "tr" => "Windows-1254",
+                "hk" or "tw" => "Big5",
+                _ => "Windows-1250"
+            };
         }
     }
 }
