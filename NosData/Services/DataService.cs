@@ -81,7 +81,7 @@ namespace NosData.Services
         public async Task RefreshData()
         {
             var startTime = DateTime.Now;
-            _logger.LogInformation($"Data refresh started at {startTime}");
+            _logger.LogInformation($"Data refresh started at {startTime}.");
 
             var nosGtdData = _nosFileService.FetchStringContainer("NSGtdData.NOS");
 

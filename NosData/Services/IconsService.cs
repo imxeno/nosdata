@@ -39,7 +39,7 @@ namespace NosData
         public async Task RefreshIcons()
         {
             var startTime = DateTime.Now;
-            _logger.LogInformation($"Icons refresh started at {startTime}");
+            _logger.LogInformation($"Icons refresh started at {startTime}.");
 
             var iconContainer = _nosFileService.FetchDataContainer("NSipData.NOS");
             Dictionary<int, byte[]> images = new();

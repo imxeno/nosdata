@@ -69,7 +69,7 @@ namespace NosData
         public async Task RefreshTranslations()
         {
             var startTime = DateTime.Now;
-            _logger.LogInformation($"Translations refresh started at {startTime}");
+            _logger.LogInformation($"Translations refresh started at {startTime}.");
             foreach(var language in Languages)
             {
                 var encoding = GetEncoding(language);

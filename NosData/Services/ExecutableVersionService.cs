@@ -36,7 +36,7 @@ namespace NosData.Services
         public async Task RefreshExecutableVersion()
         {
             var startTime = DateTime.Now;
-            _logger.LogInformation($"Executable version refresh started at {startTime}");
+            _logger.LogInformation($"Executable version refresh started at {startTime}.");
             using var md5 = System.Security.Cryptography.MD5.Create();
 
             var clientDx = _nosFileService.FetchNosTaleBinary("NostaleClientX.exe");

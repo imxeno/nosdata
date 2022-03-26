@@ -34,7 +34,7 @@ namespace NosData.Services
             _nosFileService = nosFileService;
         }
 
-        public async Task RefreshAll()
+        public async Task<bool> RefreshAll()
         {
 
             var latestHash = _nosFileService.GetUpdateHash();
@@ -47,7 +47,8 @@ namespace NosData.Services
                 var currentHash = Encoding.UTF8.GetString(currentHashStream.ToArray());
                 if (currentHash == latestHash)
                 {
-                    _logger.LogInformation("Refresh is not needed - currentHash == latestHash");
+                    _logger.LogInformation("Refresh is not needed - currentHash == latestHash.");
+                    return false;
                 }
             }
 
@@ -55,14 +56,15 @@ namespace NosData.Services
             await _blobsService.UploadBlob(Container, UpdateSha256FileName, ms);
 
             var startTime = DateTime.Now;
-            _logger.LogInformation($"Full refresh started at {startTime}");;
+            _logger.LogInformation($"Full refresh started at {startTime}.");;
 
-            await _executableVersionService.RefreshExecutableVersion();
+            /*await _executableVersionService.RefreshExecutableVersion();
             await _translationsService.RefreshTranslations();
             await _iconsService.RefreshIcons();
-            await _dataService.RefreshData();
+            await _dataService.RefreshData();*/
 
             _logger.LogInformation($"Full refresh done in {(DateTime.Now - startTime).TotalSeconds} seconds!");
+            return true;
         }
     }
 }
