@@ -65,12 +65,11 @@ namespace NosData
         {
             return await _blobsService.GetBlob("lang", $"{language}/raw/{LanguageFiles[type]}.txt");
         }
-
-        [FunctionName("RefreshTranslations")]
-        public async Task RefreshTranslations([TimerTrigger("0 0 0 * * *")] TimerInfo myTimer, ILogger log)
+        
+        public async Task RefreshTranslations()
         {
             var startTime = DateTime.Now;
-            log.LogInformation($"Translations refresh started at {startTime}");
+            _logger.LogInformation($"Translations refresh started at {startTime}");
             foreach(var language in Languages)
             {
                 var encoding = GetEncoding(language);
@@ -102,7 +101,7 @@ namespace NosData
                     }
                 }
             }
-            log.LogInformation($"Translations refresh done in {(DateTime.Now - startTime).TotalSeconds} seconds!");
+            _logger.LogInformation($"Translations refresh done in {(DateTime.Now - startTime).TotalSeconds} seconds!");
         }
 
         private string GetEncoding(string language)

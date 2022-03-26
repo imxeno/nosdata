@@ -1,7 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Security;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using NosData.DTOs;
 
@@ -73,6 +76,14 @@ namespace NosData.Utils
             var obj = JsonSerializer.Deserialize<NosTalePatchDto>(body,
                 new JsonSerializerOptions(JsonSerializerDefaults.Web));
             return obj;
+        }
+
+        public static string LatestSha256()
+        {
+            using var webClient = new WebClient();
+            var body = webClient.DownloadString(IndexUrl);
+            using var sha = SHA256.Create();
+            return Convert.ToHexString(sha.ComputeHash(Encoding.UTF8.GetBytes(body)));
         }
     }
 

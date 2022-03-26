@@ -13,11 +13,13 @@ namespace NosData.Services
 {
     public class ExecutableVersionService
     {
+        private readonly ILogger<TranslationsService> _logger;
         private readonly NosFileService _nosFileService;
         private readonly BlobsService _blobsService;
 
-        public ExecutableVersionService(NosFileService nosFileService, BlobsService blobsService)
+        public ExecutableVersionService(ILogger<TranslationsService> logger, NosFileService nosFileService, BlobsService blobsService)
         {
+            _logger = logger;
             _nosFileService = nosFileService;
             _blobsService = blobsService;
         }
@@ -31,9 +33,10 @@ namespace NosData.Services
             return JsonConvert.DeserializeObject<NosTaleExecutableVersion>(Encoding.UTF8.GetString(ms.ToArray()));
         }
 
-        [FunctionName("RefreshExecutableVersion")]
-        public async Task RefreshExecutableVersion([TimerTrigger("0 0 * * * *")] TimerInfo myTimer, ILogger log)
+        public async Task RefreshExecutableVersion()
         {
+            var startTime = DateTime.Now;
+            _logger.LogInformation($"Executable version refresh started at {startTime}");
             using var md5 = System.Security.Cryptography.MD5.Create();
 
             var clientDx = _nosFileService.FetchNosTaleBinary("NostaleClientX.exe");
@@ -73,6 +76,7 @@ namespace NosData.Services
             var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(dto, Formatting.Indented));
             await using var ms = new MemoryStream(bytes);
             await _blobsService.UploadBlob("version", "current.json", ms);
+            _logger.LogInformation($"Executable version refresh done in {(DateTime.Now - startTime).TotalSeconds} seconds!");
         }
     }
 }

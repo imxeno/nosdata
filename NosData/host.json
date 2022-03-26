@@ -1,7 +1,9 @@
 {
   "version": "2.0",
   "logging": {
-    "default": "Trace",
+    "logLevel": {
+      "default": "Information"
+    },
     "applicationInsights": {
       "samplingSettings": {
         "isEnabled": true,

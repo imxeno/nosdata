@@ -35,12 +35,12 @@ namespace NosData
         {
             return await _blobsService.GetBlob("icons", $"{id}.png");
         }
-
-        [FunctionName("RefreshIcons")]
-        public async Task RefreshIcons([TimerTrigger("0 0 0 * * *")] TimerInfo myTimer, ILogger log)
+        
+        public async Task RefreshIcons()
         {
             var startTime = DateTime.Now;
-            log.LogInformation($"Icon refresh started at {startTime}");
+            _logger.LogInformation($"Icons refresh started at {startTime}");
+
             var iconContainer = _nosFileService.FetchDataContainer("NSipData.NOS");
             Dictionary<int, byte[]> images = new();
             foreach(var icon in iconContainer.Entries)
@@ -57,7 +57,8 @@ namespace NosData
 
             await using var allMs = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(images)));
             await _blobsService.UploadBlob("icons", "all.json", allMs);
-            log.LogInformation($"Refresh done in {(DateTime.Now - startTime).TotalSeconds} seconds!");
+
+            _logger.LogInformation($"Icons refresh done in {(DateTime.Now - startTime).TotalSeconds} seconds!");
         }
 
         private static Image<Rgba32> IconToImage(NTDataContainer.NTDataContainerEntry icon)

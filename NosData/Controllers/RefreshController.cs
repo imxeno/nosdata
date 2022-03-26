@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -13,54 +14,26 @@ namespace NosData.Controllers
 {
     public class RefreshController
     {
-        private readonly DataService _dataService;
-        private readonly ExecutableVersionService _executableVersionService;
-        private readonly IconsService _iconsService;
-        private readonly TranslationsService _translationsService;
+        private readonly RefreshService _refreshService;
 
-        public RefreshController(DataService dataService, ExecutableVersionService executableVersionService,
-            IconsService iconsService, TranslationsService translationsService)
+        public RefreshController(RefreshService refreshService)
         {
-            _dataService = dataService;
-            _executableVersionService = executableVersionService;
-            _iconsService = iconsService;
-            _translationsService = translationsService;
+            _refreshService = refreshService;
         }
 
-        [FunctionName("AdminRefreshIcons")]
-        public async Task<IActionResult> AdminRefreshIcons(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "refresh/icons")] HttpRequest req,
+        [FunctionName("ForceRefresh")]
+        public async Task AdminRefreshAll(
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "refresh/force")]
+            HttpRequest req,
             ILogger log)
         {
-            await _iconsService.RefreshIcons(null, log);
-            return new OkResult();
+            await _refreshService.RefreshAll();
         }
 
-        [FunctionName("AdminRefreshData")]
-        public async Task<IActionResult> AdminRefreshData(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "refresh/data")] HttpRequest req,
-            ILogger log)
+        [FunctionName("AutoRefresh")]
+        public async Task AutoRefreshAll([TimerTrigger("0 0 0 * * *")] TimerInfo myTimer, ILogger log)
         {
-            await _dataService.RefreshData(null, log);
-            return new OkResult();
-        }
-
-        [FunctionName("AdminRefreshExecutableVersion")]
-        public async Task<IActionResult> AdminRefreshExecutableVersion(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "refresh/executableVersion")] HttpRequest req,
-            ILogger log)
-        {
-            await _executableVersionService.RefreshExecutableVersion(null, log);
-            return new OkResult();
-        }
-
-        [FunctionName("AdminRefreshTranslations")]
-        public async Task<IActionResult> AdminRefreshTranslations(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "refresh/translations")] HttpRequest req,
-            ILogger log)
-        {
-            await _translationsService.RefreshTranslations(null, log);
-            return new OkResult();
+            await _refreshService.RefreshAll();
         }
     }
 }

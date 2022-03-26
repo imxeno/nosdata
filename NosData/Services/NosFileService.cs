@@ -46,5 +46,10 @@ namespace NosData.Services
 
             return data;
         }
+
+        public string GetUpdateHash()
+        {
+            return SparkNosTaleDataSource.LatestSha256();
+        }
     }
 }

@@ -17,6 +17,7 @@ namespace NosData
             builder.Services.AddSingleton<IconsService>();
             builder.Services.AddSingleton<DataService>();
             builder.Services.AddSingleton<TranslationsService>();
+            builder.Services.AddSingleton<RefreshService>();
 
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         }

@@ -38,11 +38,13 @@ namespace NosData.Services
             { "questnpcs", "qstnpc.dat" }
         };
 
+        private readonly ILogger<DataService> _logger;
         private readonly NosFileService _nosFileService;
         private readonly BlobsService _blobsService;
 
-        public DataService(NosFileService nosFileService, BlobsService blobsService)
+        public DataService(ILogger<DataService> logger, NosFileService nosFileService, BlobsService blobsService)
         {
+            _logger = logger;
             _nosFileService = nosFileService;
             _blobsService = blobsService;
         }
@@ -76,9 +78,11 @@ namespace NosData.Services
         }
 
 
-        [FunctionName("RefreshData")]
-        public async Task RefreshData([TimerTrigger("0 0 0 * * *")] TimerInfo myTimer, ILogger log)
+        public async Task RefreshData()
         {
+            var startTime = DateTime.Now;
+            _logger.LogInformation($"Data refresh started at {startTime}");
+
             var nosGtdData = _nosFileService.FetchStringContainer("NSGtdData.NOS");
 
             foreach (var file in nosGtdData.Entries)
@@ -96,6 +100,8 @@ namespace NosData.Services
                     await _blobsService.UploadBlob("gtd", file.Key, ms);
                 }
             }
+
+            _logger.LogInformation($"Data refresh done in {(DateTime.Now - startTime).TotalSeconds} seconds!");
         }
     }
 }
