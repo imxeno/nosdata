@@ -22,12 +22,18 @@ namespace NosData.Controllers
         }
 
         [FunctionName("ForceRefresh")]
-        public async Task AdminRefreshAll(
+        public async Task<IActionResult> AdminRefreshAll(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = "refresh/force")]
             HttpRequest req,
             ILogger log)
         {
-            await _refreshService.RefreshAll();
+            var refreshed = await _refreshService.RefreshAll();
+            if (refreshed)
+            {
+                return new OkResult();
+            }
+
+            return new ConflictResult();
         }
 
         [FunctionName("AutoRefresh")]
