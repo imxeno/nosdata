@@ -28,6 +28,7 @@ namespace NosData.Services
 
         public static readonly Dictionary<string, string> RawOnlyDatFiles = new()
         {
+            { "actdescs", "act_desc.dat" },
             { "cards", "Card.dat" },
             { "npctalks", "npctalk.dat" },
             { "tutorial", "tutorial.dat" },
