@@ -5,11 +5,13 @@ using NosData.NosPack;
 using NosData.Services;
 using SixLabors.ImageSharp;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Newtonsoft.Json;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace NosData
 {
@@ -30,10 +32,15 @@ namespace NosData
         {
             return await _blobsService.GetBlob("icons", $"all.json");
         }
+        public async Task<Stream?> GetSpriteSheet(string format)
+        {
+            if (format is not "json" or "png" or "webp") return null;
+            return await _blobsService.GetBlob("icons", $"sheet/spritesheet.{format}");
+        }
 
         public async Task<Stream?> GetIcon(int id)
         {
-            return await _blobsService.GetBlob("icons", $"{id}.png");
+            return await _blobsService.GetBlob("icons", $"single/{id}.png");
         }
         
         public async Task RefreshIcons()
@@ -42,23 +49,98 @@ namespace NosData
             _logger.LogInformation($"Icons refresh started at {startTime}.");
 
             var iconContainer = _nosFileService.FetchDataContainer("NSipData.NOS");
-            Dictionary<int, byte[]> images = new();
             foreach(var icon in iconContainer.Entries)
             {
                 var image = IconToImage(icon);
                 await using var outStream = new MemoryStream();
                 await image.SaveAsPngAsync(outStream);
                 var data = outStream.ToArray();
-                if (images.ContainsKey(icon.Id)) images.Remove(icon.Id);
-                images.Add(icon.Id, data);
                 await using var ms = new MemoryStream(data);
-                await _blobsService.UploadBlob("icons", $"{icon.Id}.png", ms);
+                await _blobsService.UploadBlob("icons", $"single/{icon.Id}.png", ms);
             }
 
-            await using var allMs = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(images)));
-            await _blobsService.UploadBlob("icons", "all.json", allMs);
-
             _logger.LogInformation($"Icons refresh done in {(DateTime.Now - startTime).TotalSeconds} seconds!");
+
+            await RefreshSpriteSheet(iconContainer);
+        }
+
+        private async Task RefreshSpriteSheet(NTDataContainer iconContainer)
+        {
+            var startTime = DateTime.Now;
+            _logger.LogInformation($"Icon sprite sheet refresh started at {startTime}.");
+
+            Dictionary<int, Image<Rgba32>> imageIds = new();
+
+            var images = (from icon in iconContainer.Entries let image = IconToImage(icon) where imageIds.TryAdd(icon.Id, image) select image).ToList();
+
+            images = images.OrderBy(image => image.Width).ThenBy(image => image.Height).ToList();
+
+            const int outWidth = 2880;
+
+            var xPos = 0;
+            var yPos = 0;
+            var biggestHeight = 0;
+
+            foreach (var image in images)
+            {
+                if (xPos + image.Width > outWidth)
+                {
+                    yPos += biggestHeight;
+                    xPos = 0;
+                    biggestHeight = 0;
+                }
+
+                if (image.Height > biggestHeight)
+                    biggestHeight = image.Height;
+
+                xPos += image.Width;
+            }
+
+            var outHeight = yPos + biggestHeight;
+
+            var outImage = new Image<Rgba32>(outWidth, outHeight);
+            var outImageDesc = new Dictionary<int, int[]>();
+
+            xPos = 0;
+            yPos = 0;
+            biggestHeight = 0;
+
+            foreach (var image in images)
+            {
+                if (xPos + image.Width > outWidth)
+                {
+                    yPos += biggestHeight;
+                    xPos = 0;
+                    biggestHeight = 0;
+                }
+
+                if (image.Height > biggestHeight)
+                    biggestHeight = image.Height;
+
+                outImage.Mutate(o => o.DrawImage(image, new Point(xPos, yPos), 1f));
+                outImageDesc.Add(imageIds.First(k => k.Value == image).Key, new int[] { xPos, yPos, image.Width, image.Height });
+
+                xPos += image.Width;
+            }
+
+            {
+                await using var ms = new MemoryStream();
+                await outImage.SaveAsPngAsync(ms);
+                await _blobsService.UploadBlob("icons", "sheet/spritesheet.png", ms);
+            }
+
+            {
+                await using var ms = new MemoryStream();
+                await outImage.SaveAsWebpAsync(ms);
+                await _blobsService.UploadBlob("icons", "sheet/spritesheet.webp", ms);
+            }
+
+            {
+                await using var ms = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(outImageDesc)));
+                await _blobsService.UploadBlob("icons", "sheet/spritesheet.json", ms);
+            }
+
+            _logger.LogInformation($"Icon sprite sheet refresh done in {(DateTime.Now - startTime).TotalSeconds} seconds!");
         }
 
         private static Image<Rgba32> IconToImage(NTDataContainer.NTDataContainerEntry icon)

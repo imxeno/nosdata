@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
@@ -35,6 +36,23 @@ namespace NosData.Controllers
                 log.LogCritical(e.Message);
                 throw;
             }
+        }
+
+        [FunctionName("GetIconsSpriteSheet")]
+        public async Task<IActionResult> GetIconsSpriteSheet(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "icons/sheet/{format}")] HttpRequest req,
+            ILogger log, string format)
+        {
+            var icon = await _iconsService.GetSpriteSheet(format);
+            if (icon == null) return new StatusCodeResult(404);
+            var mime = format switch
+            {
+                "json" => "application/json",
+                "png" => "image/png",
+                "webp" => "image/webp",
+                _ => "application/octet-stream"
+            };
+            return new FileStreamResult(icon, mime);
         }
 
         [FunctionName("GetIcon")]
