@@ -34,7 +34,7 @@ namespace NosData
         }
         public async Task<Stream?> GetSpriteSheet(string format)
         {
-            if (format is not "json" or "png" or "webp") return null;
+            if (format != "json" && format != "webp" && format != "png") return null;
             return await _blobsService.GetBlob("icons", $"sheet/spritesheet.{format}");
         }
 
