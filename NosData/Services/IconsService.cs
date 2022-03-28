@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Newtonsoft.Json;
+using NosData.DTOs;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
@@ -75,7 +76,8 @@ namespace NosData
 
             images = images.OrderBy(image => image.Width).ThenBy(image => image.Height).ToList();
 
-            const int outWidth = 2880;
+            var meta = new SpriteSheetMetaDto();
+            meta.Width = 2880;
 
             var xPos = 0;
             var yPos = 0;
@@ -83,7 +85,7 @@ namespace NosData
 
             foreach (var image in images)
             {
-                if (xPos + image.Width > outWidth)
+                if (xPos + image.Width > meta.Width)
                 {
                     yPos += biggestHeight;
                     xPos = 0;
@@ -96,10 +98,8 @@ namespace NosData
                 xPos += image.Width;
             }
 
-            var outHeight = yPos + biggestHeight;
-
-            var outImage = new Image<Rgba32>(outWidth, outHeight);
-            var outImageDesc = new Dictionary<int, int[]>();
+            meta.Height = yPos + biggestHeight;
+            var outImage = new Image<Rgba32>(meta.Width, meta.Height);
 
             xPos = 0;
             yPos = 0;
@@ -107,7 +107,7 @@ namespace NosData
 
             foreach (var image in images)
             {
-                if (xPos + image.Width > outWidth)
+                if (xPos + image.Width > meta.Width)
                 {
                     yPos += biggestHeight;
                     xPos = 0;
@@ -120,7 +120,7 @@ namespace NosData
                 var pos = xPos;
                 var pos1 = yPos;
                 outImage.Mutate(o => o.DrawImage(image, new Point(pos, pos1), 1f));
-                outImageDesc.Add(imageIds.First(k => k.Value == image).Key, new int[] { xPos, yPos, image.Width, image.Height });
+                meta.Positions.Add(imageIds.First(k => k.Value == image).Key, new int[] { xPos, yPos, image.Width, image.Height });
 
                 xPos += image.Width;
             }
@@ -140,7 +140,7 @@ namespace NosData
             }
 
             {
-                await using var ms = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(outImageDesc)));
+                await using var ms = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(meta)));
                 ms.Position = 0;
                 await _blobsService.UploadBlob("icons", "sheet/spritesheet.json", ms);
             }
