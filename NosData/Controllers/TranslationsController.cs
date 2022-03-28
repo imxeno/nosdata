@@ -7,6 +7,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NosData.Utils;
 
 namespace NosData.Controllers
 {
@@ -20,6 +21,7 @@ namespace NosData.Controllers
         }
 
         [FunctionName("GetTranslations")]
+        [FunctionResponseCache(60 * 60, ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetTranslations(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "translations/{language}/{type}")] HttpRequest req,
             ILogger log, string language, string type)
@@ -41,6 +43,7 @@ namespace NosData.Controllers
         }
 
         [FunctionName("GetRawTranslations")]
+        [FunctionResponseCache(60 * 60, ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetRawTranslations(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "translations/{language}/{type}/raw")] HttpRequest req,
             ILogger log, string language, string type)

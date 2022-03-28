@@ -8,6 +8,7 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NosData.Utils;
 
 namespace NosData.Controllers
 {
@@ -21,6 +22,7 @@ namespace NosData.Controllers
         }
 
         [FunctionName("GetIconsSpriteSheet")]
+        [FunctionResponseCache(60 * 60, ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetIconsSpriteSheet(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "icons/sheet/{format}")] HttpRequest req,
             ILogger log, string format)
@@ -38,6 +40,7 @@ namespace NosData.Controllers
         }
 
         [FunctionName("GetIcon")]
+        [FunctionResponseCache(60 * 60, ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetIcon(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "icons/{id:int}")] HttpRequest req,
             ILogger log, int id)

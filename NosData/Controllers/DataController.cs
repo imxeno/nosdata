@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using NosData.Services;
+using NosData.Utils;
 
 namespace NosData.Controllers
 {
@@ -21,6 +22,7 @@ namespace NosData.Controllers
         }
 
         [FunctionName("GetData")]
+        [FunctionResponseCache(60 * 60, ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetData(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "data/{type}")] HttpRequest req,
             ILogger log, string type)
@@ -35,6 +37,7 @@ namespace NosData.Controllers
         }
 
         [FunctionName("GetRawData")]
+        [FunctionResponseCache(60 * 60, ResponseCacheLocation.Any)]
         public async Task<IActionResult> GetRawData(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "data/{type}/raw")] HttpRequest req,
             ILogger log, string type)
