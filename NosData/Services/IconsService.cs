@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using NosData.DTOs;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -140,7 +141,10 @@ namespace NosData
             }
 
             {
-                await using var ms = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(meta)));
+                await using var ms = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(meta, Formatting.Indented, new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver()
+                })));
                 ms.Position = 0;
                 await _blobsService.UploadBlob("icons", "sheet/spritesheet.json", ms);
             }
