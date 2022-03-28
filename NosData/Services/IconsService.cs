@@ -117,7 +117,9 @@ namespace NosData
                 if (image.Height > biggestHeight)
                     biggestHeight = image.Height;
 
-                outImage.Mutate(o => o.DrawImage(image, new Point(xPos, yPos), 1f));
+                var pos = xPos;
+                var pos1 = yPos;
+                outImage.Mutate(o => o.DrawImage(image, new Point(pos, pos1), 1f));
                 outImageDesc.Add(imageIds.First(k => k.Value == image).Key, new int[] { xPos, yPos, image.Width, image.Height });
 
                 xPos += image.Width;
@@ -126,17 +128,20 @@ namespace NosData
             {
                 await using var ms = new MemoryStream();
                 await outImage.SaveAsPngAsync(ms);
+                ms.Position = 0;
                 await _blobsService.UploadBlob("icons", "sheet/spritesheet.png", ms);
             }
 
             {
                 await using var ms = new MemoryStream();
                 await outImage.SaveAsWebpAsync(ms);
+                ms.Position = 0;
                 await _blobsService.UploadBlob("icons", "sheet/spritesheet.webp", ms);
             }
 
             {
                 await using var ms = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(outImageDesc)));
+                ms.Position = 0;
                 await _blobsService.UploadBlob("icons", "sheet/spritesheet.json", ms);
             }
 
