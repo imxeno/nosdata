@@ -20,24 +20,6 @@ namespace NosData.Controllers
             _iconsService = iconsService;
         }
 
-        [FunctionName("GetAllIcons")]
-        public async Task<IActionResult> GetAllIcons(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "icons")] HttpRequest req,
-            ILogger log)
-        {
-            try
-            {
-                var icon = await _iconsService.GetAllIcons();
-                if (icon == null) return new StatusCodeResult(503);
-                return new OkObjectResult(icon);
-            }
-            catch (Exception e)
-            {
-                log.LogCritical(e.Message);
-                throw;
-            }
-        }
-
         [FunctionName("GetIconsSpriteSheet")]
         public async Task<IActionResult> GetIconsSpriteSheet(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "icons/sheet/{format}")] HttpRequest req,
