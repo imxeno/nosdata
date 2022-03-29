@@ -8,7 +8,7 @@ A cloud-native data provider for all things NosTale.
 
 ## License
 
-Copyright (c) 2021, Piotr Adamczyk
+Copyright (c) 2022, Piotr Adamczyk
 
 ## Notice of Non-Affiliation and Disclaimer
 
