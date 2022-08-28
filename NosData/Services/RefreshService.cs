@@ -20,10 +20,11 @@ namespace NosData.Services
         private readonly ILogger<RefreshService> _logger;
         private readonly BlobsService _blobsService;
         private readonly NosFileService _nosFileService;
+        private readonly MapZonesService _mapsZonesService;
 
         public RefreshService(ILogger<RefreshService> logger, DataService dataService, ExecutableVersionService executableVersionService,
             IconsService iconsService, TranslationsService translationsService, BlobsService blobsService,
-            NosFileService nosFileService)
+            NosFileService nosFileService, MapZonesService mapZonesService)
         {
             _logger = logger;
             _blobsService = blobsService;
@@ -32,6 +33,7 @@ namespace NosData.Services
             _iconsService = iconsService;
             _translationsService = translationsService;
             _nosFileService = nosFileService;
+            _mapsZonesService = mapZonesService;
         }
 
         public async Task<bool> RefreshAll(bool force = false)
@@ -65,6 +67,7 @@ namespace NosData.Services
             await _executableVersionService.RefreshExecutableVersion();
             await _translationsService.RefreshTranslations();
             await _iconsService.RefreshIcons();
+            await _mapsZonesService.RefreshZones();
             await _dataService.RefreshData();
 
             _logger.LogInformation($"Full refresh done in {(DateTime.Now - startTime).TotalSeconds} seconds!");

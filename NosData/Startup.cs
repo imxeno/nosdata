@@ -15,6 +15,7 @@ namespace NosData
             builder.Services.AddSingleton<NosFileService>();
             builder.Services.AddSingleton<ExecutableVersionService>();
             builder.Services.AddSingleton<IconsService>();
+            builder.Services.AddSingleton<MapZonesService>();
             builder.Services.AddSingleton<DataService>();
             builder.Services.AddSingleton<TranslationsService>();
             builder.Services.AddSingleton<RefreshService>();
