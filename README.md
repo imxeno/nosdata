@@ -6,9 +6,9 @@ A cloud-native data provider for all things NosTale.
 
 </div>
 
-## License
+# License
 
-Copyright (c) 2022, Piotr Adamczyk
+[AGPL V3](/LICENSE)
 
 ## Notice of Non-Affiliation and Disclaimer
 
